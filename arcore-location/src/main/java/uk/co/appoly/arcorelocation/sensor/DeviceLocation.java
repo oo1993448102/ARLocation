@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 import uk.co.appoly.arcorelocation.LocationScene;
 import uk.co.appoly.arcorelocation.utils.KalmanLatLong;
+import uk.co.appoly.arcorelocation.utils.TransUtil;
 
 /**
  * Created by John on 02/03/2018.
@@ -67,7 +68,9 @@ public class DeviceLocation implements LocationListener {
 
         gpsCount++;
 
-        filterAndAddLocation(newLocation);
+
+
+        filterAndAddLocation(TransUtil.wgs84togcj02(newLocation));
     }
 
     @Override
@@ -204,7 +207,11 @@ public class DeviceLocation implements LocationListener {
             Qvalue = currentSpeed; // meters per second
         }
 
-        kalmanFilter.Process(location.getLatitude(), location.getLongitude(), location.getAccuracy(), elapsedTimeInMillis, Qvalue);
+        kalmanFilter.Process(
+//                TransUtil.wgs84togcj02(location.getLongitude(),location.getLatitude())[1],
+//                TransUtil.wgs84togcj02(location.getLongitude(),location.getLatitude())[0],
+                location.getLatitude(), location.getLongitude(),
+                location.getAccuracy(), elapsedTimeInMillis, Qvalue);
         double predictedLat = kalmanFilter.get_lat();
         double predictedLng = kalmanFilter.get_lng();
 

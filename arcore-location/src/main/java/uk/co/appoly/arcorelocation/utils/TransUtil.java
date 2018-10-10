@@ -1,5 +1,7 @@
 package uk.co.appoly.arcorelocation.utils;
 
+import android.location.Location;
+
 /**
  * @Author: EchoZhou
  * @Date: 2018-09-27 18:01
@@ -19,11 +21,44 @@ public class TransUtil {
         double magic = Math.sin(radLat);
         magic = 1 - ee * magic * magic;
         double sqrtMagic = Math.sqrt(magic);
-        dLat = (dLat * 180.0)/ ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+        dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
         dLon = (dLon * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
-        return new double[] { dLat, dLon };
+        return new double[]{dLat, dLon};
 
     }
+
+
+
+    public static Location wgs84togcj02(Location location) {
+        double dLat = transformLat(location.getLongitude() - 105.0,
+                location.getLatitude() - 35.0);
+        double dLon = transformLon(location.getLongitude() - 105.0,
+                location.getLatitude() - 35.0);
+        double radLat = location.getLatitude() / 180.0 * Math.PI;
+        double magic = Math.sin(radLat);
+        magic = 1 - ee * magic * magic;
+        double sqrtMagic = Math.sqrt(magic);
+        dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+        dLon = (dLon * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
+        location.setLatitude(dLat+location.getLatitude());
+        location.setLongitude(dLon+location.getLongitude());
+        return location;
+    }
+
+    public static double[] gcj02towgs84(double lng, double lat) {
+        double dlat = transformLat(lng - 105.0, lat - 35.0);
+        double dlng = transformLon(lng - 105.0, lat - 35.0);
+        double radlat = lat / 180.0 * Math.PI;
+        double magic = Math.sin(radlat);
+        magic = 1 - ee * magic * magic;
+        double sqrtmagic = Math.sqrt(magic);
+        dlat = (dlat * 180.0) / ((a * (1 - ee)) / (magic * sqrtmagic) * Math.PI);
+        dlng = (dlng * 180.0) / (a / sqrtmagic * Math.cos(radlat) * Math.PI);
+        double mglat = lat + dlat;
+        double mglng = lng + dlng;
+        return new double[]{lng * 2 - mglng, lat * 2 - mglat};
+    }
+
 
     public static double transformLat(double x, double y) {
         double ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y
@@ -48,7 +83,6 @@ public class TransUtil {
                 / 30.0 * Math.PI)) * 2.0 / 3.0;
         return ret;
     }
-
 
 
 }

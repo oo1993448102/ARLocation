@@ -28,7 +28,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.ar.core.Frame;
-import com.google.ar.core.Plane;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
@@ -38,6 +37,8 @@ import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.rendering.ModelRenderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -68,6 +69,9 @@ public class LocationActivity extends AppCompatActivity {
     private LocationScene locationScene;
     private boolean first = true;
 
+    private List<House> houseList = new ArrayList<>();
+    private List<ViewRenderable> viewRenderables = new ArrayList<>();
+
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -77,29 +81,42 @@ public class LocationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sceneform);
         arSceneView = findViewById(R.id.ar_scene_view);
+        House house_1 = new House("歌林春天馨园", 31.27287039094972, 121.44389121570103);
+        House house_2 = new House("金荣公寓", 31.273142774057952, 121.44511075546684);
+        House house_3 = new House("宜川小区", 31.270879818488897, 121.4389931970126);
+        House house_4 = new House("望景苑", 31.269698898381982, 121.43899980991299);
+        House house_5 = new House("大宁路660弄", 31.2726001616614, 121.4479971517318);
+        House house_6 = new House("绿苑(闸北)", 31.26883416704542, 121.44054794127722);
+        House house_7 = new House("大宁龙盛雅苑", 31.271248468985213, 121.4473411687975);
+        House house_8 = new House("八方花苑", 31.27153209497381, 121.44797222392782);
+        House house_9 = new House("延长小区(闸北)", 31.267451797691802, 121.44054794127722);
+        House house_10 = new House("延长小区(普陀)", 31.267428787563922, 121.44061345283365);
 
-        // Build a renderable from a 2D View.
-        CompletableFuture<ViewRenderable> exampleLayout =
-                ViewRenderable.builder()
-                        .setView(this, R.layout.example_layout)
-                        .build();
+        houseList.add(house_1);
+        houseList.add(house_2);
+        houseList.add(house_3);
+        houseList.add(house_4);
+        houseList.add(house_5);
+        houseList.add(house_6);
+        houseList.add(house_7);
+        houseList.add(house_8);
+        houseList.add(house_9);
+        houseList.add(house_10);
 
-        CompletableFuture<ViewRenderable> testLayout =
-                ViewRenderable.builder()
-                        .setView(this, R.layout.example_layout_2)
-                        .build();
+        CompletableFuture<ViewRenderable>[] views = new CompletableFuture[houseList.size()];
 
-        // When you build a Renderable, Sceneform loads its resources in the background while returning
-        // a CompletableFuture. Call thenAccept(), handle(), or check isDone() before calling get().
-        CompletableFuture<ModelRenderable> andy = ModelRenderable.builder()
-                .setSource(this, R.raw.andy)
-                .build();
+        for (int i = 0; i < houseList.size(); i++) {
+            CompletableFuture<ViewRenderable> exampleLayout =
+                    ViewRenderable.builder()
+                            .setView(this, R.layout.example_layout)
+                            .build();
+            views[i] = exampleLayout;
+        }
+
 
 
         CompletableFuture.allOf(
-                exampleLayout,
-                testLayout,
-                andy)
+                views)
                 .handle(
                         (notUsed, throwable) -> {
                             // When you build a Renderable, Sceneform loads its resources in the background while
@@ -112,9 +129,12 @@ public class LocationActivity extends AppCompatActivity {
                             }
 
                             try {
-                                exampleLayoutRenderable = exampleLayout.get();
-                                andyRenderable = andy.get();
-                                testLayoutRenderable = testLayout.get();
+                                for (CompletableFuture<ViewRenderable> completableFuture : views) {
+                                    viewRenderables.add(completableFuture.get());
+                                }
+//                                    exampleLayoutRenderable = exampleLayout.get();
+//                                andyRenderable = andy.get();
+//                                testLayoutRenderable = testLayout.get();
                                 hasFinishedLoading = true;
 
                             } catch (InterruptedException | ExecutionException ex) {
@@ -126,6 +146,7 @@ public class LocationActivity extends AppCompatActivity {
 
         // Set an update listener on the Scene that will hide the loading message once a Plane is
         // detected.
+        arSceneView.getPlaneRenderer().setEnabled(false);
         arSceneView
                 .getScene()
                 .setOnUpdateListener(
@@ -135,39 +156,24 @@ public class LocationActivity extends AppCompatActivity {
                             }
 
                             if (locationScene == null) {
-                                // If our locationScene object hasn't been setup yet, this is a good time to do it
-                                // We know that here, the AR components have been initiated.
                                 locationScene = new LocationScene(this, this, arSceneView);
 
-                                // Now lets create our location markers.
-                                // First, a layout
-                                LocationMarker layoutLocationMarker = new LocationMarker(
-                                        121.44389121570103,
-                                        31.27287039094972,
-                                        getExampleView()
-                                );
-
-                                // An example "onRender" event, called every frame
-                                // Updates the layout with the markers distance
-                                layoutLocationMarker.setRenderEvent(new LocationNodeRender() {
-                                    @Override
-                                    public void render(LocationNode node) {
-                                        View eView = exampleLayoutRenderable.getView();
-                                        TextView distanceTextView = eView.findViewById(R.id.textView2);
-                                        distanceTextView.setText(node.getDistance() + "M");
+                                for (int i = 0; i < houseList.size(); i++) {
+                                    House house = houseList.get(i);
+                                    if (viewRenderables.get(i) != null) {
+                                        ViewRenderable viewRenderable = viewRenderables.get(i);
+                                        LocationMarker locationMarker = new LocationMarker(house.getLng(), house.getLat(), getNode(house, viewRenderable));
+                                        locationMarker.setRenderEvent(new LocationNodeRender() {
+                                            @Override
+                                            public void render(LocationNode node) {
+                                                View eView = viewRenderable.getView();
+                                                TextView distanceTextView = eView.findViewById(R.id.textView2);
+                                                distanceTextView.setText(node.getDistance() + "M");
+                                            }
+                                        });
+                                        locationScene.mLocationMarkers.add(locationMarker);
                                     }
-                                });
-                                // Adding the marker
-                                locationScene.mLocationMarkers.add(layoutLocationMarker);
-
-                                // Adding a simple location marker of a 3D model
-                                locationScene.mLocationMarkers.add(
-                                        new LocationMarker(
-                                                121.44061345283365,
-                                                31.26742878756392,
-                                                getAndy()));
-
-
+                                }
                             }
 
 
@@ -179,41 +185,39 @@ public class LocationActivity extends AppCompatActivity {
                             if (frame.getCamera().getTrackingState() != TrackingState.TRACKING) {
                                 return;
                             }
-                            if (first) {
-                                first = false;
-                                LocationMarker testMarker = new LocationMarker(
-                                        121.44061345283365,
-                                        31.26742878756392,
-                                        getTest());
-                                locationScene.update(testMarker,frame);
-                            }
+//                            if (first) {
+//                                first = false;
+//                                LocationMarker testMarker = new LocationMarker(
+//                                        121.44061345283365,
+//                                        31.26742878756392,
+////                                        TransUtil.gcj02towgs84(121.44061345283365,
+////                                                31.26742878756392)[0],
+////                                        TransUtil.gcj02towgs84(121.44061345283365,
+////                                                31.26742878756392)[1],
+//                                        getTest());
+//                                locationScene.update(testMarker, frame);
+//                            }
 
                             if (locationScene != null) {
                                 locationScene.processFrame(frame);
                             }
 
                         });
-
-
-        // Lastly request CAMERA & fine location permission which is required by ARCore-Location.
         ARLocationPermissionHelper.requestPermission(this);
     }
 
-    /**
-     * Example node of a layout
-     *
-     * @return
-     */
     @TargetApi(Build.VERSION_CODES.N)
-    private Node getExampleView() {
+    private Node getNode(House house, ViewRenderable viewRenderable) {
         Node base = new Node();
-        base.setRenderable(exampleLayoutRenderable);
+        base.setRenderable(viewRenderable);
         Context c = this;
         // Add  listeners etc here
-        View eView = exampleLayoutRenderable.getView();
+        View eView = viewRenderable.getView();
+        TextView tv = eView.findViewById(R.id.textView);
+        tv.setText(house.getName());
         eView.setOnTouchListener((v, event) -> {
             Toast.makeText(
-                    c, "Location marker touched.", Toast.LENGTH_LONG)
+                    c, house.getName(), Toast.LENGTH_LONG)
                     .show();
             return false;
         });
@@ -221,39 +225,6 @@ public class LocationActivity extends AppCompatActivity {
         return base;
     }
 
-    @TargetApi(Build.VERSION_CODES.N)
-    private Node getTest() {
-        Node base = new Node();
-        base.setRenderable(testLayoutRenderable);
-        Context c = this;
-        // Add  listeners etc here
-        View eView = testLayoutRenderable.getView();
-        eView.setOnTouchListener((v, event) -> {
-            Toast.makeText(
-                    c, "test!!!!!!!!", Toast.LENGTH_LONG)
-                    .show();
-            return false;
-        });
-
-        return base;
-    }
-
-    /***
-     * Example Node of a 3D model
-     *
-     * @return
-     */
-    private Node getAndy() {
-        Node base = new Node();
-        base.setRenderable(andyRenderable);
-        Context c = this;
-        base.setOnTapListener((v, event) -> {
-            Toast.makeText(
-                    c, "Andy touched.", Toast.LENGTH_LONG)
-                    .show();
-        });
-        return base;
-    }
 
     /**
      * Make sure we call locationScene.resume();
@@ -279,6 +250,11 @@ public class LocationActivity extends AppCompatActivity {
                 }
             } catch (UnavailableException e) {
                 DemoUtils.handleSessionException(this, e);
+                this.finish();
+            }
+            catch (Exception e){
+                Toast.makeText(LocationActivity.this, "exit!!!!", Toast.LENGTH_LONG).show();
+                this.finish();
             }
         }
 
@@ -349,26 +325,4 @@ public class LocationActivity extends AppCompatActivity {
         }
     }
 
-//    private void showLoadingMessage() {
-//        if (loadingMessageSnackbar != null && loadingMessageSnackbar.isShownOrQueued()) {
-//            return;
-//        }
-//
-//        loadingMessageSnackbar =
-//                Snackbar.make(
-//                        LocationActivity.this.findViewById(android.R.id.content),
-//                        R.string.plane_finding,
-//                        Snackbar.LENGTH_INDEFINITE);
-//        loadingMessageSnackbar.getView().setBackgroundColor(0xbf323232);
-//        loadingMessageSnackbar.show();
-//    }
-
-//    private void hideLoadingMessage() {
-//        if (loadingMessageSnackbar == null) {
-//            return;
-//        }
-//
-////        loadingMessageSnackbar.dismiss();
-////        loadingMessageSnackbar = null;
-//    }
 }

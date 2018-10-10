@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Frame;
@@ -208,11 +209,11 @@ public class LocationScene {
                     int markerDistance = (int) Math.round(
                             LocationUtils.distance(
                                     mLocationMarkers.get(i).latitude,
-                                    TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(), deviceLocation.currentBestLocation.getLatitude())[1],
-//                                    deviceLocation.currentBestLocation.getLatitude(),
+//                                    TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(), deviceLocation.currentBestLocation.getLatitude())[1],
+                                    deviceLocation.currentBestLocation.getLatitude(),
                                     mLocationMarkers.get(i).longitude,
-                                    TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(), deviceLocation.currentBestLocation.getLatitude())[0],
-//                                    deviceLocation.currentBestLocation.getLongitude(),
+//                                    TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(), deviceLocation.currentBestLocation.getLatitude())[0],
+                                    deviceLocation.currentBestLocation.getLongitude(),
                                     0,
                                     0)
                     );
@@ -224,10 +225,10 @@ public class LocationScene {
                     }
 
                     float markerBearing = deviceOrientation.currentDegree + (float) LocationUtils.bearing(
-                            TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(),deviceLocation.currentBestLocation.getLatitude())[1],
-                            TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(),deviceLocation.currentBestLocation.getLatitude())[0],
-//                            deviceLocation.currentBestLocation.getLatitude(),
-//                            deviceLocation.currentBestLocation.getLongitude(),
+//                            TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(),deviceLocation.currentBestLocation.getLatitude())[1],
+//                            TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(),deviceLocation.currentBestLocation.getLatitude())[0],
+                            deviceLocation.currentBestLocation.getLatitude(),
+                            deviceLocation.currentBestLocation.getLongitude(),
                             mLocationMarkers.get(i).latitude,
                             mLocationMarkers.get(i).longitude);
 
@@ -269,13 +270,20 @@ public class LocationScene {
 
                     // Current camera height
                     float y = frame.getCamera().getDisplayOrientedPose().ty();
+                    Log.e(TAG, frame.getUpdatedAnchors().size() + "111111111111111111111111");
+//                    Toast.makeText(this,frame.getUpdatedAnchors().size()+"",Toast.LENGTH_SHORT).show();
 
                     if (mLocationMarkers.get(i).anchorNode != null &&
                             mLocationMarkers.get(i).anchorNode.getAnchor() != null) {
-                        mLocationMarkers.get(i).anchorNode.getAnchor().detach();
-                        mLocationMarkers.get(i).anchorNode.setAnchor(null);
-                        mLocationMarkers.get(i).anchorNode.setEnabled(false);
-                        mLocationMarkers.get(i).anchorNode = null;
+//                        mLocationMarkers.get(i).anchorNode.getAnchor().detach();
+//                        mLocationMarkers.get(i).anchorNode.setAnchor(null);
+//                        mLocationMarkers.get(i).anchorNode.setEnabled(false);
+//                        mLocationMarkers.get(i).anchorNode = null;
+                        if (mLocationMarkers.get(i).getRenderEvent() != null) {
+                            mLocationMarkers.get(i).anchorNode.setRenderEvent(mLocationMarkers.get(i).getRenderEvent());
+                        }
+                        if (Math.abs(mLocationMarkers.get(i).anchorNode.getRenderDistance() - renderDistance) < 10 && Math.abs(mLocationMarkers.get(i).anchorNode.getRotation() - rotation) < 10)
+                            continue;
                     }
 
                     // Don't immediately assign newly created anchor in-case of exceptions
@@ -288,6 +296,9 @@ public class LocationScene {
                     mLocationMarkers.get(i).anchorNode.setParent(mArSceneView.getScene());
                     mLocationMarkers.get(i).anchorNode.addChild(mLocationMarkers.get(i).node);
 
+                    mLocationMarkers.get(i).anchorNode.setRotation(rotation);
+                    mLocationMarkers.get(i).anchorNode.setRenderDistance(renderDistance);
+
                     if (mLocationMarkers.get(i).getRenderEvent() != null) {
                         mLocationMarkers.get(i).anchorNode.setRenderEvent(mLocationMarkers.get(i).getRenderEvent());
                     }
@@ -296,7 +307,7 @@ public class LocationScene {
                     mLocationMarkers.get(i).anchorNode.setScalingMode(mLocationMarkers.get(i).getScalingMode());
                     mLocationMarkers.get(i).anchorNode.setGradualScalingMaxScale(mLocationMarkers.get(i).getGradualScalingMaxScale());
                     mLocationMarkers.get(i).anchorNode.setGradualScalingMinScale(mLocationMarkers.get(i).getGradualScalingMinScale());
-                    mLocationMarkers.get(i).anchorNode.setHeight(mLocationMarkers.get(i).getHeight());
+                    mLocationMarkers.get(i).anchorNode.setHeight(i);
 
                     if (minimalRefreshing)
                         mLocationMarkers.get(i).anchorNode.scaleAndRotate();
@@ -358,16 +369,18 @@ public class LocationScene {
             int markerDistance = (int) Math.round(
                     LocationUtils.distance(
                             testMarker.latitude,
-                            TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(),deviceLocation.currentBestLocation.getLatitude())[1],
-//                            deviceLocation.currentBestLocation.getLatitude(),
+//                            TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(),deviceLocation.currentBestLocation.getLatitude())[1],
+                            deviceLocation.currentBestLocation.getLatitude(),
                             testMarker.longitude,
-//                            deviceLocation.currentBestLocation.getLongitude(),
-                            TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(),deviceLocation.currentBestLocation.getLatitude())[0],
+                            deviceLocation.currentBestLocation.getLongitude(),
+//                            TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(),deviceLocation.currentBestLocation.getLatitude())[0],
                             0,
                             0)
             );
 
             float markerBearing = deviceOrientation.currentDegree + (float) LocationUtils.bearing(
+//                    TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(),deviceLocation.currentBestLocation.getLatitude())[1],
+//                    TransUtil.wgs84togcj02(deviceLocation.currentBestLocation.getLongitude(),deviceLocation.currentBestLocation.getLatitude())[0],
                     deviceLocation.currentBestLocation.getLatitude(),
                     deviceLocation.currentBestLocation.getLongitude(),
                     testMarker.latitude,

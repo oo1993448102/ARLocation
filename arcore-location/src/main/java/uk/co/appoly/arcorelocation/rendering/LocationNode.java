@@ -12,6 +12,7 @@ import com.google.ar.sceneform.math.Vector3;
 import uk.co.appoly.arcorelocation.LocationMarker;
 import uk.co.appoly.arcorelocation.LocationScene;
 import uk.co.appoly.arcorelocation.utils.LocationUtils;
+import uk.co.appoly.arcorelocation.utils.TransUtil;
 
 public class LocationNode extends AnchorNode {
 
@@ -25,6 +26,25 @@ public class LocationNode extends AnchorNode {
     private float height = 0F;
     private float gradualScalingMinScale = 0.8F;
     private float gradualScalingMaxScale = 1.4F;
+
+    private double rotation;
+    private double renderDistance;
+
+    public double getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(double rotation) {
+        this.rotation = rotation;
+    }
+
+    public double getRenderDistance() {
+        return renderDistance;
+    }
+
+    public void setRenderDistance(double renderDistance) {
+        this.renderDistance = renderDistance;
+    }
 
     private LocationMarker.ScalingMode scalingMode = LocationMarker.ScalingMode.FIXED_SIZE_ON_SCREEN;
     private LocationScene locationScene;
@@ -133,8 +153,10 @@ public class LocationNode extends AnchorNode {
             int markerDistance = (int) Math.ceil(
                     LocationUtils.distance(
                             locationMarker.latitude,
+//                            TransUtil.wgs84togcj02(locationScene.deviceLocation.currentBestLocation.getLongitude(),locationScene.deviceLocation.currentBestLocation.getLatitude())[1],
                             locationScene.deviceLocation.currentBestLocation.getLatitude(),
                             locationMarker.longitude,
+//                            TransUtil.wgs84togcj02(locationScene.deviceLocation.currentBestLocation.getLongitude(),locationScene.deviceLocation.currentBestLocation.getLatitude())[0],
                             locationScene.deviceLocation.currentBestLocation.getLongitude(),
                             0,
                             0)
